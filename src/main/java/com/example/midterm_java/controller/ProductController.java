@@ -15,13 +15,35 @@ public class ProductController {
     private ProductRepository productRepository;
 
     @GetMapping
-    public List<Product> getAllProducts() {
+    public List<Product> getAllProducts(@RequestParam(required = false) String name) {
+        if (name != null && !name.trim().isEmpty()) {
+            return getProductByName(name);
+        }
         return productRepository.findAll();
     }
 
     @GetMapping("/{id}")
     public Product getProductById(@PathVariable Integer id) {
         return productRepository.findById(id).orElse(null);
+    }
+
+    @GetMapping("/name/{name}")
+    public List<Product> getProductByName(@PathVariable String name) {
+        List<Product> list = productRepository.findByPName(name);
+        if (list.isEmpty()) {
+            list = productRepository.findByPNameContainingIgnoreCase(name);
+        }
+        return list;
+    }
+
+    @GetMapping("/by-name/{name}")
+    public List<Product> getProductByNamePath(@PathVariable String name) {
+        return getProductByName(name);
+    }
+
+    @GetMapping("/search")
+    public List<Product> searchProductByName(@RequestParam String name) {
+        return getProductByName(name);
     }
 
     @PostMapping

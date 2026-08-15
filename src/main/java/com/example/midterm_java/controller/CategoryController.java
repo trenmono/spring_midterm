@@ -14,13 +14,35 @@ public class CategoryController {
     private CategoryRepository categoryRepository;
 
     @GetMapping
-    public List<Category> getAllCategories() {
+    public List<Category> getAllCategories(@RequestParam(required = false) String name) {
+        if (name != null && !name.trim().isEmpty()) {
+            return getCategoryByName(name);
+        }
         return categoryRepository.findAll();
     }
 
     @GetMapping("/{id}")
     public Category getCategoryById(@PathVariable Integer id) {
         return categoryRepository.findById(id).orElse(null);
+    }
+
+    @GetMapping("/name/{name}")
+    public List<Category> getCategoryByName(@PathVariable String name) {
+        List<Category> list = categoryRepository.findByCategoryName(name);
+        if (list.isEmpty()) {
+            list = categoryRepository.findByCategoryNameContainingIgnoreCase(name);
+        }
+        return list;
+    }
+
+    @GetMapping("/by-name/{name}")
+    public List<Category> getCategoryByNamePath(@PathVariable String name) {
+        return getCategoryByName(name);
+    }
+
+    @GetMapping("/search")
+    public List<Category> searchCategoryByName(@RequestParam String name) {
+        return getCategoryByName(name);
     }
 
     @PostMapping

@@ -14,6 +14,9 @@ public interface CategoryRepository extends JpaRepository<Category, Integer> {
 
     List<Category> findByCategoryName(String name);
 
+    @Query("SELECT c FROM Category c WHERE LOWER(c.categoryName) LIKE LOWER(CONCAT('%', :name, '%'))")
+    List<Category> findByCategoryNameContainingIgnoreCase(@Param("name") String name);
+
     boolean existsByCategoryName(String name);
 
     @Query("SELECT c FROM Category c WHERE c.catId = :catId")

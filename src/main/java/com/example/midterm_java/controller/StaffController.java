@@ -16,13 +16,35 @@ public class StaffController {
     private StaffRepository staffRepository;
 
     @GetMapping
-    public List<Staff> getAllStaff() {
+    public List<Staff> getAllStaff(@RequestParam(required = false) String name) {
+        if (name != null && !name.trim().isEmpty()) {
+            return getStaffByName(name);
+        }
         return staffRepository.findAll();
     }
 
     @GetMapping("/{id}")
     public Staff getStaffById(@PathVariable Integer id) {
         return staffRepository.findById(id).orElse(null);
+    }
+
+    @GetMapping("/name/{name}")
+    public List<Staff> getStaffByName(@PathVariable String name) {
+        List<Staff> list = staffRepository.findByUserNameContainingIgnoreCase(name);
+        if (list.isEmpty()) {
+            staffRepository.findByUserName(name).ifPresent(list::add);
+        }
+        return list;
+    }
+
+    @GetMapping("/by-name/{name}")
+    public List<Staff> getStaffByNamePath(@PathVariable String name) {
+        return getStaffByName(name);
+    }
+
+    @GetMapping("/search")
+    public List<Staff> searchStaffByName(@RequestParam String name) {
+        return getStaffByName(name);
     }
 
     @PostMapping
@@ -45,5 +67,11 @@ public class StaffController {
         }
 
         return null;
+    }
+
+    @DeleteMapping("/{id}")
+    public String deleteStaff(@PathVariable Integer id) {
+        staffRepository.deleteById(id);
+        return "Staff deleted successfully";
     }
 }

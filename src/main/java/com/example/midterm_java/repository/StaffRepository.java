@@ -20,4 +20,7 @@ public interface StaffRepository extends JpaRepository<Staff, Integer> {
     Optional<Staff> findByUserName(String userName);
 
     List<Staff> findByUserNameContaining(String name);
+
+    @Query("SELECT s FROM Staff s WHERE LOWER(s.userName) LIKE LOWER(CONCAT('%', :name, '%'))")
+    List<Staff> findByUserNameContainingIgnoreCase(@Param("name") String name);
 }
