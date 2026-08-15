@@ -1,8 +1,8 @@
 package com.example.midterm_java.exception;
 
-public class CustomException extends RuntimeException {
+public class ResourceNotFoundException extends RuntimeException {
 
-    public CustomException(String message) {
+    public ResourceNotFoundException(String message) {
         super(message);
     }
 }

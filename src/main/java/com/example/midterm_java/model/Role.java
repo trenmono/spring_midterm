@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class Auth {
+public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private int rId;
