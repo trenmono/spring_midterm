@@ -15,18 +15,18 @@ import java.util.Optional;
 @Service
 public class StaffServiceImpl implements StaffService {
 
-    @Autowired
     private final StaffRepository staffRepository;
 
+    @Autowired
     public StaffServiceImpl(StaffRepository staffRepository) {
         this.staffRepository = staffRepository;
     }
 
-
     @Override
     public ResponseEntity<ApiResponse<Staff>> addStaff(Staff staff) {
-        if(!staff.getUserName().isEmpty() && !staff.getPassword().isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+        if(staff == null || staff.getUserName() == null || staff.getUserName().trim().isEmpty() ||
+           staff.getPassword() == null || staff.getPassword().trim().isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new ApiResponse<>(
                             false,
                             400,
@@ -50,7 +50,7 @@ public class StaffServiceImpl implements StaffService {
                         true,
                         201,
                         "Staff Created Successfully",
-                        null
+                        savedStaff
                 ));
     }
 
@@ -104,11 +104,11 @@ public class StaffServiceImpl implements StaffService {
 
     @Override
     public ResponseEntity<List<Staff>> findAllStaff() {
-        Iterable<Staff> staff = staffRepository.findAll();
-        if(staff.iterator().hasNext()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        List<Staff> staff = staffRepository.findAll();
+        if(staff.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(staff);
         }
-        return ResponseEntity.status(HttpStatus.FOUND).build();
+        return ResponseEntity.ok(staff);
     }
 
     @Override
@@ -120,22 +120,20 @@ public class StaffServiceImpl implements StaffService {
                             false,
                             404,
                             "Staff not found",
-                           null
-
+                            null
                     ));
         }
-        return ResponseEntity.status(HttpStatus.FOUND)
-                .body(new ApiResponse<>(
+        return ResponseEntity.ok(new ApiResponse<>(
                         true,
-                        202,
+                        200,
                         "Staff found",
-                        null
+                        staff.get()
                 ));
     }
 
     @Override
     public ResponseEntity<ApiResponse<List<Staff>>> findStaffByName(String name) {
-        List<Staff> staff = staffRepository.findByUserName(name);
+        List<Staff> staff = staffRepository.findByUserNameContaining(name);
         if(staff.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ApiResponse<>(
@@ -145,13 +143,11 @@ public class StaffServiceImpl implements StaffService {
                             null
                     ));
         }
-        return ResponseEntity.status(HttpStatus.FOUND)
-                .body(new ApiResponse<>(
+        return ResponseEntity.ok(new ApiResponse<>(
                         true,
-                        202,
+                        200,
                         "Staff Found",
                         staff
-
                 ));
     }
 }

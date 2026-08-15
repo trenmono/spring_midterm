@@ -15,21 +15,21 @@ import java.util.Optional;
 @Service
 public class ProductServiceImpl implements ProductService {
 
-    @Autowired
     private final ProductRepository productRepository;
 
+    @Autowired
     public ProductServiceImpl(ProductRepository productRepository) {
         this.productRepository = productRepository;
     }
 
     @Override
     public ResponseEntity<ApiResponse<Product>> addProduct(Product product) {
-        if (!product.getPName().matches("^[a-zA-Z]+$")) {
+        if (product == null || product.getPName() == null || product.getPName().trim().isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new ApiResponse<>(
                             false,
                             400,
-                            "Product name must be characters only",
+                            "Invalid product name",
                             null
                     ));
         }
@@ -91,7 +91,12 @@ public class ProductServiceImpl implements ProductService {
         }
         Product updatedProduct = existingProduct.get();
         updatedProduct.setPName(product.getPName());
-        updatedProduct.setProductCategory(product.getProductCategory());
+        updatedProduct.setPrice(product.getPrice());
+        updatedProduct.setQty(product.getQty());
+        updatedProduct.setExpireDate(product.getExpireDate());
+        if (product.getProductCategory() != null) {
+            updatedProduct.setProductCategory(product.getProductCategory());
+        }
         Product savedProduct = productRepository.save(updatedProduct);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new ApiResponse<>(
@@ -114,10 +119,9 @@ public class ProductServiceImpl implements ProductService {
                             null
                     ));
         }
-        return ResponseEntity.status(HttpStatus.FOUND)
-                .body(new ApiResponse<>(
+        return ResponseEntity.ok(new ApiResponse<>(
                         true,
-                        302,
+                        200,
                         "Product found",
                         product
                 ));
@@ -135,10 +139,9 @@ public class ProductServiceImpl implements ProductService {
                             null
                     ));
         }
-        return ResponseEntity.status(HttpStatus.FOUND)
-                .body(new ApiResponse<>(
+        return ResponseEntity.ok(new ApiResponse<>(
                         true,
-                        202,
+                        200,
                         "Products found",
                         products
                 ));
@@ -146,7 +149,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public ResponseEntity<ApiResponse<List<Product>>> findByPCategory(String category) {
-        List<Product> products = productRepository.findByCategory();
+        List<Product> products = productRepository.findByCategoryCategoryName(category);
         if (products.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ApiResponse<>(
@@ -156,10 +159,9 @@ public class ProductServiceImpl implements ProductService {
                             null
                     ));
         }
-        return ResponseEntity.status(HttpStatus.FOUND)
-                .body(new ApiResponse<>(
+        return ResponseEntity.ok(new ApiResponse<>(
                         true,
-                        302,
+                        200,
                         "Products found",
                         products
                 ));
@@ -169,9 +171,9 @@ public class ProductServiceImpl implements ProductService {
     public ResponseEntity<List<Product>> findAllProducts() {
         List<Product> products = productRepository.findAll();
         if (products.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(products);
         }
-        return ResponseEntity.status(HttpStatus.FOUND).body(products);
+        return ResponseEntity.ok(products);
     }
 
 }

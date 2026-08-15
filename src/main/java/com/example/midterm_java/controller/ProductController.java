@@ -1,6 +1,5 @@
 package com.example.midterm_java.controller;
 
-
 import com.example.midterm_java.model.Product;
 import com.example.midterm_java.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +20,7 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public Product getProductById(@PathVariable Long id) {
+    public Product getProductById(@PathVariable Integer id) {
         return productRepository.findById(id).orElse(null);
     }
 
@@ -32,7 +31,7 @@ public class ProductController {
 
     @PutMapping("/{id}")
     public Product updateProduct(
-            @PathVariable Long id,
+            @PathVariable Integer id,
             @RequestBody Product product
     ) {
         Product existing = productRepository.findById(id).orElse(null);
@@ -41,6 +40,10 @@ public class ProductController {
             existing.setPName(product.getPName());
             existing.setPrice(product.getPrice());
             existing.setQty(product.getQty());
+            existing.setExpireDate(product.getExpireDate());
+            if (product.getProductCategory() != null) {
+                existing.setProductCategory(product.getProductCategory());
+            }
             return productRepository.save(existing);
         }
 
@@ -48,7 +51,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}")
-    public String deleteProduct(@PathVariable Long id) {
+    public String deleteProduct(@PathVariable Integer id) {
         productRepository.deleteById(id);
         return "Product deleted successfully";
     }

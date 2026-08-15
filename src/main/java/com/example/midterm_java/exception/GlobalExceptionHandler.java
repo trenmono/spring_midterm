@@ -20,17 +20,10 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Object> handleOtherExceptions(Exception ex) {
-        Map<String, Object> error = new HashMap<>();
-        error.put("timestamp", LocalDateTime.now());
-        error.put("error", "An unexpected error occurred");
-        return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-    @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneralExceptions(Exception ex) {
         ErrorResponse error = new ErrorResponse(
                 500,
-                "Internal Server Error"
+                ex.getMessage() != null ? ex.getMessage() : "Internal Server Error"
         );
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);

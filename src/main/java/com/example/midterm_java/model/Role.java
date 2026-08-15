@@ -1,14 +1,8 @@
 package com.example.midterm_java.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Entity
-@AllArgsConstructor
-@NoArgsConstructor
-@Data
 public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -16,4 +10,28 @@ public class Role {
 
     @Column(unique=true)
     private String roleName;
+
+    public Role() {
+    }
+
+    public Role(int rId, String roleName) {
+        this.rId = rId;
+        this.roleName = roleName;
+    }
+
+    public int getRId() {
+        return rId;
+    }
+
+    public void setRId(int rId) {
+        this.rId = rId;
+    }
+
+    public String getRoleName() {
+        return roleName;
+    }
+
+    public void setRoleName(String roleName) {
+        this.roleName = roleName;
+    }
 }

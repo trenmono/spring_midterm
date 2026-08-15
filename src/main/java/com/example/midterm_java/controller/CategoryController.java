@@ -1,6 +1,5 @@
 package com.example.midterm_java.controller;
 
-
 import com.example.midterm_java.model.Category;
 import com.example.midterm_java.repository.CategoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +19,7 @@ public class CategoryController {
     }
 
     @GetMapping("/{id}")
-    public Category getCategoryById(@PathVariable Long id) {
+    public Category getCategoryById(@PathVariable Integer id) {
         return categoryRepository.findById(id).orElse(null);
     }
 
@@ -31,7 +30,7 @@ public class CategoryController {
 
     @PutMapping("/{id}")
     public Category updateCategory(
-            @PathVariable Long id,
+            @PathVariable Integer id,
             @RequestBody Category category
     ) {
         Category existing = categoryRepository.findById(id).orElse(null);
@@ -45,7 +44,7 @@ public class CategoryController {
     }
 
     @DeleteMapping("/{id}")
-    public String deleteCategory(@PathVariable Long id) {
+    public String deleteCategory(@PathVariable Integer id) {
         categoryRepository.deleteById(id);
         return "Category deleted successfully";
     }
