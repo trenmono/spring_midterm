@@ -48,8 +48,13 @@
             <!-- 1. USER MANAGEMENT -->
             <div th:if="${module == 'users'}">
                 <div th:if="${action == 'list'}">
-                    <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:15px;">
                         <h3>System Users</h3>
+                        <form action="/admin/dashboard" method="GET" style="display:flex; gap:10px; flex:1; max-width:400px;">
+                            <input type="hidden" name="module" value="users">
+                            <input type="text" name="search" th:value="${search}" placeholder="Search username..." class="form-control">
+                            <button type="submit" class="btn btn-primary">Search</button>
+                        </form>
                         <a href="/admin/dashboard?module=users&action=add" class="btn btn-add">+ Add User</a>
                     </div>
                     <div class="table-card">
@@ -109,10 +114,26 @@
             <!-- 2. PRODUCT MANAGEMENT -->
             <div th:if="${module == 'products'}">
                 <div th:if="${action == 'list'}">
-                    <div style="display:flex; justify-content:space-between;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:15px;">
                         <h3>Product Inventory</h3>
                         <a href="/admin/dashboard?module=products&action=add" class="btn btn-add">+ Add Product</a>
                     </div>
+
+                    <!-- Product Category Filter & Search Form -->
+                    <form action="/admin/dashboard" method="GET" style="margin: 15px 0; display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                        <input type="hidden" name="module" value="products">
+                        <select name="filterCategory" class="form-control" style="width:200px;" onchange="this.form.submit()">
+                            <option value="">All Categories</option>
+                            <option th:each="cat : ${categories}"
+                                    th:value="${cat.catId}"
+                                    th:text="${cat.categoryName}"
+                                    th:selected="${filterCategory == cat.catId}">
+                            </option>
+                        </select>
+                        <input type="text" name="search" th:value="${search}" placeholder="Search products..." class="form-control" style="width:250px;">
+                        <button type="submit" class="btn btn-primary">Search</button>
+                    </form>
+
                     <div class="table-card">
                         <table class="data-table">
                             <thead>
@@ -130,7 +151,8 @@
                             <tr th:each="p : ${products}">
                                 <td th:text="${p.pId}"></td>
                                 <td>
-                                    <img th:src="@{'/images/' + ${p.imageName}}" alt="Product Image"
+                                    <img th:src="@{'/images/' + ${p.imageName != null && !p.imageName.empty ? p.imageName : 'product_1.png'}}"
+                                         alt="Product Image"
                                          style="width:45px; height:45px; object-fit:cover; border-radius:6px; border:1px solid #e2e8f0;">
                                 </td>
                                 <td th:text="${p.pName}"></td>
@@ -193,8 +215,13 @@
             <!-- 3. CATEGORY MANAGEMENT -->
             <div th:if="${module == 'categories'}">
                 <div th:if="${action == 'list'}">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:15px;">
                         <h3>Categories</h3>
+                        <form action="/admin/dashboard" method="GET" style="display:flex; gap:10px; flex:1; max-width:400px;">
+                            <input type="hidden" name="module" value="categories">
+                            <input type="text" name="search" th:value="${search}" placeholder="Search category..." class="form-control">
+                            <button type="submit" class="btn btn-primary">Search</button>
+                        </form>
                         <a href="/admin/dashboard?module=categories&action=add" class="btn btn-add">+ Add Category</a>
                     </div>
                     <div class="table-card" style="margin-bottom:20px;">
@@ -216,37 +243,6 @@
                                     <a th:href="@{/categories/delete/{id}(id=${c.catId}, sourceRole='ADMIN')}"
                                        class="btn btn-delete">Delete</a>
                                 </td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Category Filter Selector -->
-                    <h3>Filter Products by Category</h3>
-                    <form action="/admin/dashboard" method="GET" style="margin-top:10px; display:flex; gap:10px;">
-                        <input type="hidden" name="module" value="categories">
-                        <select name="filterCategory" class="form-control" style="width:250px;">
-                            <option value="">Show All Categories</option>
-                            <option th:each="cat : ${categories}" th:value="${cat.catId}" th:text="${cat.categoryName}"
-                                    th:selected="${filterCategory == cat.catId}"></option>
-                        </select>
-                        <button type="submit" class="btn btn-primary">Filter</button>
-                    </form>
-
-                    <div class="table-card">
-                        <table class="data-table">
-                            <thead>
-                            <tr>
-                                <th>Product</th>
-                                <th>Price</th>
-                                <th>Stock</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr th:each="p : ${categoryProducts}">
-                                <td th:text="${p.name}"></td>
-                                <td th:text="${'$' + p.price}"></td>
-                                <td th:text="${p.quantity}"></td>
                             </tr>
                             </tbody>
                         </table>
@@ -273,12 +269,13 @@
             <div th:if="${module == 'expired'}">
                 <h3>Expired Product Monitoring</h3>
                 <form action="/admin/dashboard" method="GET"
-                      style="margin: 15px 0; display:flex; gap:15px; align-items:center;">
+                      style="margin: 15px 0; display:flex; gap:15px; align-items:center; flex-wrap:wrap;">
                     <input type="hidden" name="module" value="expired">
                     <div><label>Years:</label> <input type="number" id="yInput" name="expYear" th:value="${expYear}" class="form-control"
-                                                      style="width:100px;"></div>
+                                                      style="width:90px;"></div>
                     <div><label>Months:</label> <input type="number" id="mInput" name="expMonth" th:value="${expMonth}" class="form-control"
-                                                       style="width:100px;"></div>
+                                                       style="width:90px;"></div>
+                    <div><label>Search:</label> <input type="text" name="search" th:value="${search}" placeholder="Search expired product..." class="form-control" style="width:200px;"></div>
                     <button type="submit" class="btn btn-primary" style="margin-top:18px;">Apply Filter</button>
                 </form>
 
@@ -306,8 +303,17 @@
 
             <!-- 5. TOP SALES -->
             <div th:if="${module == 'top-sales'}">
-                <h3>Top Sales Categories</h3>
-                <p style="color:#64748b; margin: 8px 0 16px;">Ranked by total units sold across all purchases.</p>
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:15px;">
+                    <div>
+                        <h3>Top Sales Category & Products</h3>
+                        <p style="color:#64748b; margin: 4px 0 0;">Ranked by total units sold across all purchases.</p>
+                    </div>
+                    <form action="/admin/dashboard" method="GET" style="display:flex; gap:10px; max-width:350px;">
+                        <input type="hidden" name="module" value="top-sales">
+                        <input type="text" name="search" th:value="${search}" placeholder="Search category, product, user..." class="form-control">
+                        <button type="submit" class="btn btn-primary">Search</button>
+                    </form>
+                </div>
 
                 <!-- Empty state -->
                 <div th:if="${#lists.isEmpty(topSales)}"
@@ -324,6 +330,8 @@
                         <tr>
                             <th style="width:60px;">Rank</th>
                             <th>Category</th>
+                            <th>Product Name</th>
+                            <th>User Buy (Buyer)</th>
                             <th style="text-align:right;">Units Sold</th>
                             <th>Performance</th>
                         </tr>
@@ -343,6 +351,10 @@
                                    th:text="${item.categoryName}"
                                    style="color:var(--primary); font-weight:bold; text-decoration:none;">Category</a>
                             </td>
+                            <td th:text="${item.productName}">Product Name</td>
+                            <td>
+                                <span style="background:#e0f2fe; color:#0369a1; padding:3px 8px; border-radius:12px; font-weight:600; font-size:0.85rem;" th:text="${item.userBuy}">User Buy</span>
+                            </td>
                             <td style="text-align:right; font-weight:bold; color:var(--primary);"
                                 th:text="${item.totalSold}">0
                             </td>
@@ -361,6 +373,7 @@
                     </table>
                 </div>
             </div>
+
 
         </div>
     </main>

@@ -1,7 +1,9 @@
 package com.example.midterm_java.controller;
 
 
+import com.example.midterm_java.model.Role;
 import com.example.midterm_java.model.Staff;
+import com.example.midterm_java.repository.RoleRepository;
 import com.example.midterm_java.repository.StaffRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -14,11 +16,13 @@ public class StaffController {
 
     @Autowired
     private StaffRepository staffRepository;
+    private RoleRepository roleRepository;
 
     @GetMapping
-    public List<Staff> getAllStaff(@RequestParam(required = false) String name) {
-        if (name != null && !name.trim().isEmpty()) {
-            return getStaffByName(name);
+    public List<Staff> getAllStaff(@RequestParam(required = false) String name, @RequestParam(required = false) String search) {
+        String query = (search != null && !search.trim().isEmpty()) ? search : name;
+        if (query != null && !query.trim().isEmpty()) {
+            return getStaffByName(query);
         }
         return staffRepository.findAll();
     }
@@ -42,6 +46,16 @@ public class StaffController {
         return getStaffByName(name);
     }
 
+    @GetMapping("/search")
+    public List<Staff> searchStaff(@RequestParam(required = false) String name, @RequestParam(required = false) String search) {
+        String query = (search != null && !search.trim().isEmpty()) ? search : name;
+        if (query != null && !query.trim().isEmpty()) {
+            return getStaffByName(query);
+        }
+        return staffRepository.findAll();
+    }
+
+
     @PostMapping
     public Staff createStaff(@RequestBody Staff staff) {
         return staffRepository.save(staff);
@@ -55,14 +69,31 @@ public class StaffController {
         Staff existing = staffRepository.findById(id).orElse(null);
 
         if (existing != null) {
-            existing.setUserName(staff.getUserName());
-            existing.setPassword(staff.getPassword());
+            if (staff.getUserName() != null) {
+                existing.setUserName(staff.getUserName());
+            }
+            if (staff.getPassword() != null) {
+                existing.setPassword(staff.getPassword());
+            }
+            if (staff.getRole() != null) {
+                Role roleInput = staff.getRole();
+                if (roleInput.getRoleName() != null && !roleInput.getRoleName().trim().isEmpty()) {
+                    String roleName = roleInput.getRoleName().trim().toUpperCase();
+                    Role resolvedRole = staffRepository.findById(id).map(Staff::getRole).orElse(null);
+                    Role roleEntity = roleRepository.findByRoleNameIgnoreCase(roleName)
+                            .orElseGet(() -> roleRepository.save(new Role(roleName)));
+                    existing.setRole(roleEntity);
+                } else if (roleInput.getRId() > 0) {
+                    roleRepository.findById(roleInput.getRId()).ifPresent(existing::setRole);
+                }
+            }
 
             return staffRepository.save(existing);
         }
 
         return null;
     }
+
 
     @DeleteMapping("/delete/{id}")
     public String deleteStaff(@PathVariable Integer id) {

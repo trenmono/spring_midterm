@@ -19,9 +19,10 @@ public class CategoryController {
 
 
     @GetMapping
-    public List<Category> getAllCategories(@RequestParam(required = false) String name) {
-        if (name != null && !name.trim().isEmpty()) {
-            return getCategoryByName(name);
+    public List<Category> getAllCategories(@RequestParam(required = false) String name, @RequestParam(required = false) String search) {
+        String query = (search != null && !search.trim().isEmpty()) ? search : name;
+        if (query != null && !query.trim().isEmpty()) {
+            return getCategoryByName(query);
         }
         return categoryRepository.findAll();
     }
@@ -44,6 +45,16 @@ public class CategoryController {
     public List<Category> getCategoryByNamePath(@PathVariable String name) {
         return getCategoryByName(name);
     }
+
+    @GetMapping("/search")
+    public List<Category> searchCategories(@RequestParam(required = false) String name, @RequestParam(required = false) String search) {
+        String query = (search != null && !search.trim().isEmpty()) ? search : name;
+        if (query != null && !query.trim().isEmpty()) {
+            return getCategoryByName(query);
+        }
+        return categoryRepository.findAll();
+    }
+
 
     @PostMapping
     public Category createCategory(@RequestBody Category category) {

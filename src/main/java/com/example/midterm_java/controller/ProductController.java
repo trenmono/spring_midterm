@@ -19,9 +19,10 @@ public class ProductController {
     }
 
     @GetMapping
-    public List<Product> getAllProducts(@RequestParam(required = false) String name) {
-        if (name != null && !name.trim().isEmpty()) {
-            return getProductByName(name);
+    public List<Product> getAllProducts(@RequestParam(required = false) String name, @RequestParam(required = false) String search) {
+        String query = (search != null && !search.trim().isEmpty()) ? search : name;
+        if (query != null && !query.trim().isEmpty()) {
+            return getProductByName(query);
         }
         return productRepository.findAll();
     }
@@ -44,6 +45,16 @@ public class ProductController {
     public List<Product> getProductByNamePath(@PathVariable String name) {
         return getProductByName(name);
     }
+
+    @GetMapping("/search")
+    public List<Product> searchProducts(@RequestParam(required = false) String name, @RequestParam(required = false) String search) {
+        String query = (search != null && !search.trim().isEmpty()) ? search : name;
+        if (query != null && !query.trim().isEmpty()) {
+            return getProductByName(query);
+        }
+        return productRepository.findAll();
+    }
+
     @PostMapping
     public Product createProduct(@RequestBody Product product) {
         return productRepository.save(product);

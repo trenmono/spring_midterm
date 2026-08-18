@@ -13,10 +13,16 @@
         <h2>Shopping Cart</h2>
     </div>
     <div class="nav-actions">
+        <div th:if="${user != null}" class="user-badge-header">
+            <span>👤</span>
+            <span th:text="${user.userName}">User</span>
+        </div>
         <a href="/store" class="btn btn-primary">Continue Shopping</a>
         <a href="/logout" class="btn btn-delete">Logout</a>
     </div>
+
 </header>
+
 
 <main class="cart-shell">
     <div th:if="${#lists.isEmpty(cartItems)}" class="cart-card" style="padding:70px 30px;text-align:center;">
@@ -37,7 +43,7 @@
                     <td>
                         <div style="display:flex;align-items:center;gap:13px;">
                             <img class="cart-item-image"
-                                 th:src="@{'/images/' + ${item.product.imageName != null && !item.product.imageName.empty ? item.product.imageName : 'product_1.png'}}"
+                                 th:src="@{'/images/' + ${item.product.imageName != null && !item.product.imageName.empty ? item.product.imageName : 'balancing_toner.jpg'}}"
                                  alt="Product">
                             <div>
                                 <strong style="display:block;color:#111827;" th:text="${item.product.name}">Product</strong>

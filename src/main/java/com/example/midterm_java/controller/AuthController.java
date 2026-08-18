@@ -29,7 +29,12 @@ public class AuthController {
     }
 
     @GetMapping("/search")
-    public Staff searchByName(@RequestParam String name) {
-        return authRepository.findByUserName(name).orElse(null);
+    public Staff searchByName(@RequestParam(required = false) String name, @RequestParam(required = false) String search) {
+        String query = (search != null && !search.trim().isEmpty()) ? search : name;
+        if (query != null && !query.trim().isEmpty()) {
+            return authRepository.findByUserName(query).orElse(null);
+        }
+        return null;
     }
+
 }

@@ -50,40 +50,68 @@ public class AdminDashboardController {
             @RequestParam(required = false) Integer filterCategory,
             @RequestParam(required = false) Integer expMonth,
             @RequestParam(required = false) Integer expYear,
+            @RequestParam(required = false) String search,
             Model model
     ) {
         model.addAttribute("module", module);
         model.addAttribute("action", action);
+        model.addAttribute("search", search);
         model.addAttribute("topSeller", dashboardService.getTopSeller());
 
         switch (module.toLowerCase()) {
-            case "users" -> loadUsers(model, action, id);
-            case "products" -> loadProducts(model, action, id);
-            case "categories" -> loadCategories(model, action, id, filterCategory);
-            case "expired" -> loadExpired(model, expMonth, expYear);
-            case "top-sales" -> loadTopSales(model);
-            default -> loadUsers(model, action, id);
+            case "users" -> loadUsers(model, action, id, search);
+            case "products" -> loadProducts(model, action, id, filterCategory, search);
+            case "categories" -> loadCategories(model, action, id, filterCategory, search);
+            case "expired" -> loadExpired(model, filterCategory, expMonth, expYear, search);
+            case "top-sales" -> loadTopSales(model, search);
+            default -> loadUsers(model, action, id, search);
         }
         return "admin/dashboard";
     }
 
-    private void loadUsers(Model model, String action, Integer id) {
-        model.addAttribute("users", staffRepository.findAll());
+    private void loadUsers(Model model, String action, Integer id, String search) {
+        if (search != null && !search.trim().isEmpty()) {
+            model.addAttribute("users", staffRepository.findByUserNameContainingIgnoreCase(search.trim()));
+        } else {
+            model.addAttribute("users", staffRepository.findAll());
+        }
         if ("edit".equalsIgnoreCase(action) && id != null) {
             model.addAttribute("editUser", staffRepository.findById(id).orElse(null));
         }
     }
 
-    private void loadProducts(Model model, String action, Integer id) {
-        model.addAttribute("products", productRepository.findAll());
+    private void loadProducts(Model model, String action, Integer id, Integer filterCategory, String search) {
         model.addAttribute("categories", categoryRepository.findAllByOrderByCatIdAsc());
+        model.addAttribute("filterCategory", filterCategory);
+
+        if (filterCategory != null) {
+            Category cat = categoryRepository.findById(filterCategory).orElse(null);
+            if (cat != null) {
+                if (search != null && !search.trim().isEmpty()) {
+                    model.addAttribute("products", productRepository.findByPNameContainingIgnoreCaseAndCategory(search.trim(), cat));
+                } else {
+                    model.addAttribute("products", productRepository.findByCategory(cat));
+                }
+            } else {
+                model.addAttribute("products", Collections.emptyList());
+            }
+        } else if (search != null && !search.trim().isEmpty()) {
+            model.addAttribute("products", productRepository.findByPNameContainingIgnoreCase(search.trim()));
+        } else {
+            model.addAttribute("products", productRepository.findAll());
+        }
+
         if ("edit".equalsIgnoreCase(action) && id != null) {
             model.addAttribute("editProduct", productRepository.findById(id).orElse(null));
         }
     }
 
-    private void loadCategories(Model model, String action, Integer id, Integer filterCategory) {
-        model.addAttribute("categories", categoryRepository.findAllByOrderByCatIdAsc());
+    private void loadCategories(Model model, String action, Integer id, Integer filterCategory, String search) {
+        if (search != null && !search.trim().isEmpty()) {
+            model.addAttribute("categories", categoryRepository.findByCategoryNameContainingIgnoreCase(search.trim()));
+        } else {
+            model.addAttribute("categories", categoryRepository.findAllByOrderByCatIdAsc());
+        }
 
         if (filterCategory != null) {
             Category cat = categoryRepository.findById(filterCategory).orElse(null);
@@ -98,22 +126,33 @@ public class AdminDashboardController {
         }
     }
 
-    private void loadExpired(Model model, Integer expMonth, Integer expYear) {
+    private void loadExpired(Model model, Integer filterCategory, Integer expMonth, Integer expYear, String search) {
+        model.addAttribute("filterCategory", filterCategory);
         model.addAttribute("expMonth", expMonth);
         model.addAttribute("expYear", expYear);
-        model.addAttribute("expiredProducts", dashboardService.filterExpiredProducts(expMonth, expYear, null));
+        
+        String categoryName = null;
+        if (filterCategory != null) {
+            Category cat = categoryRepository.findById(filterCategory).orElse(null);
+            if (cat != null) {
+                categoryName = cat.getCategoryName();
+            }
+        }
+        
+        model.addAttribute("expiredProducts", dashboardService.filterExpiredProducts(expMonth, expYear, categoryName, search));
     }
 
-    private void loadTopSales(Model model) {
-        model.addAttribute("topSales", dashboardService.getTopSalesRanked());
+    private void loadTopSales(Model model, String search) {
+        model.addAttribute("topSales", dashboardService.getTopSalesRanked(search));
     }
+
 
     @PostMapping("/users/save")
     public String saveUser(
             @RequestParam(required = false) Integer id,
             @RequestParam String username,
             @RequestParam String password,
-            @RequestParam String role,
+            @RequestParam(required = false) String role,
             RedirectAttributes redirectAttributes
     ) {
         if (id == null && staffRepository.existsByUserName(username)) {
@@ -122,8 +161,11 @@ public class AdminDashboardController {
             return "redirect:/admin/dashboard?module=users&action=add";
         }
 
-        Role staffRole = roleRepository.findByRoleName(role)
-                .orElseGet(() -> roleRepository.save(new Role(role.toUpperCase())));
+        String targetRole = (role != null && !role.trim().isEmpty()) ? role.trim().toUpperCase() : "STAFF";
+
+        Role staffRole = roleRepository.findByRoleNameIgnoreCase(targetRole)
+                .orElseGet(() -> roleRepository.findByRoleName(targetRole)
+                .orElseGet(() -> roleRepository.save(new Role(targetRole))));
 
         Staff staff = (id != null) ? staffRepository.findById(id).orElse(new Staff()) : new Staff();
         staff.setUserName(username);
@@ -135,6 +177,7 @@ public class AdminDashboardController {
         redirectAttributes.addFlashAttribute("toastType", "success");
         return "redirect:/admin/dashboard?module=users";
     }
+
 
     @GetMapping("/users/delete/{id}")
     public String deleteUser(@PathVariable Integer id, RedirectAttributes redirectAttributes) {

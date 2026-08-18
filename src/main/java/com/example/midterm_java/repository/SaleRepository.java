@@ -15,4 +15,13 @@ public interface SaleRepository extends JpaRepository<SaleRecord, Integer> {
            "GROUP BY p.category.catId, p.category.categoryName " +
            "ORDER BY SUM(s.quantitySold) DESC")
     List<Object[]> findTopSalesByCategory();
+
+    @Query("SELECT COALESCE(p.category.catId, 0), COALESCE(p.category.categoryName, 'Uncategorized'), p.pName, s.userBuy, SUM(s.quantitySold) " +
+           "FROM SaleRecord s JOIN s.product p " +
+           "GROUP BY p.category.catId, p.category.categoryName, p.pName, s.userBuy " +
+           "ORDER BY SUM(s.quantitySold) DESC")
+    List<Object[]> findTopSalesDetailed();
 }
+
+
+

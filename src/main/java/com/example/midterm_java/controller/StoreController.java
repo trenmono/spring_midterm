@@ -47,6 +47,7 @@ public class StoreController {
         model.addAttribute("search", search);
         model.addAttribute("categoryId", categoryId);
         model.addAttribute("cartCount", getCartCount(session));
+        model.addAttribute("user", session.getAttribute("user"));
         return "store/store";
     }
 
@@ -78,8 +79,10 @@ public class StoreController {
 
         model.addAttribute("cartItems", cartItems);
         model.addAttribute("total", total);
+        model.addAttribute("user", session.getAttribute("user"));
         return "store/shoppingcart";
     }
+
 
     @PostMapping("/cart/update")
     public String updateCart(
@@ -108,10 +111,19 @@ public class StoreController {
 
     @PostMapping("/cart/buy")
     public String buyCart(HttpSession session, RedirectAttributes redirectAttributes) {
+        com.example.midterm_java.model.Staff currentUser = (com.example.midterm_java.model.Staff) session.getAttribute("user");
+        if (currentUser == null) {
+            redirectAttributes.addFlashAttribute("toastMessage", "Please login to complete your purchase!");
+            redirectAttributes.addFlashAttribute("toastType", "danger");
+            return "redirect:/login";
+        }
+
         Map<Integer, Integer> cart = getCart(session);
 
         if (!cart.isEmpty()) {
             LocalDate today = LocalDate.now();
+            String userBuy = currentUser.getUserName();
+
             for (Map.Entry<Integer, Integer> entry : cart.entrySet()) {
                 Integer productId = entry.getKey();
                 Integer purchasedQty = entry.getValue();
@@ -125,8 +137,8 @@ public class StoreController {
                     product.setQty(String.valueOf(newStock));
                     productRepository.save(product);
 
-                    // Record sale
-                    saleRepository.save(new SaleRecord(product, purchasedQty, today));
+                    // Record sale with product, quantity, date, buyer user entity and buyer username
+                    saleRepository.save(new SaleRecord(product, purchasedQty, today, currentUser, userBuy));
                 }
             }
         }
@@ -136,6 +148,8 @@ public class StoreController {
         redirectAttributes.addFlashAttribute("toastType", "success");
         return "redirect:/store";
     }
+
+
 
     // -------------------------------------------------------------
     // Helpers

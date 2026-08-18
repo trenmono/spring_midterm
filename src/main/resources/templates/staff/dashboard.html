@@ -20,6 +20,8 @@
                     class="menu-icon">🗂️</span> Category Management</a></li>
             <li th:classappend="${module == 'expired'} ? 'active'"><a href="/staff/dashboard?module=expired"><span
                     class="menu-icon">⏰</span> Expired Products</a></li>
+            <li th:classappend="${module == 'top-sales'} ? 'active'"><a href="/staff/dashboard?module=top-sales"><span
+                    class="menu-icon">📈</span> Top Sales Category</a></li>
         </ul>
         <!-- Bottom Sidebar Logout -->
         <div class="logout-sidebar">
@@ -47,10 +49,10 @@
                         <a href="/staff/dashboard?module=products&action=add" class="btn btn-add">+ Add Product</a>
                     </div>
 
-                    <!-- Product Category Filter Dropdown -->
-                    <form action="/staff/dashboard" method="GET" style="margin: 15px 0;">
+                    <!-- Product Category Filter Dropdown & Search Form -->
+                    <form action="/staff/dashboard" method="GET" style="margin: 15px 0; display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
                         <input type="hidden" name="module" value="products">
-                        <select name="filterCategory" class="form-control" style="width:250px;"
+                        <select name="filterCategory" class="form-control" style="width:200px;"
                                 onchange="this.form.submit()">
                             <option value="">All Categories</option>
                             <option th:each="cat : ${categories}"
@@ -59,6 +61,8 @@
                                     th:selected="${filterCategory == cat.catId}">
                             </option>
                         </select>
+                        <input type="text" name="search" th:value="${search}" placeholder="Search products..." class="form-control" style="width:250px;">
+                        <button type="submit" class="btn btn-primary">Search</button>
                     </form>
 
                     <div class="table-card">
@@ -142,8 +146,13 @@
             <!-- 2. CATEGORY MODULE -->
             <div th:if="${module == 'categories'}">
                 <div th:if="${action == 'list'}">
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:15px;">
                         <h3>Categories</h3>
+                        <form action="/staff/dashboard" method="GET" style="display:flex; gap:10px; flex:1; max-width:400px;">
+                            <input type="hidden" name="module" value="categories">
+                            <input type="text" name="search" th:value="${search}" placeholder="Search category..." class="form-control">
+                            <button type="submit" class="btn btn-primary">Search</button>
+                        </form>
                         <a href="/staff/dashboard?module=categories&action=add" class="btn btn-add">+ Add Category</a>
                     </div>
                     <div class="table-card">
@@ -189,12 +198,13 @@
             <div th:if="${module == 'expired'}">
                 <h3>Expired Product Monitoring</h3>
                 <form action="/staff/dashboard" method="GET"
-                      style="margin: 15px 0; display:flex; gap:15px; align-items:center;">
+                      style="margin: 15px 0; display:flex; gap:15px; align-items:center; flex-wrap:wrap;">
                     <input type="hidden" name="module" value="expired">
                     <div><label>Years:</label> <input type="number" id="yInput" name="expYear" th:value="${expYear}" class="form-control"
-                                                      style="width:100px;"></div>
+                                                      style="width:90px;"></div>
                     <div><label>Months:</label> <input type="number" id="mInput" name="expMonth" th:value="${expMonth}" class="form-control"
-                                                       style="width:100px;"></div>
+                                                       style="width:90px;"></div>
+                    <div><label>Search:</label> <input type="text" name="search" th:value="${search}" placeholder="Search expired product..." class="form-control" style="width:200px;"></div>
                     <button type="submit" class="btn btn-primary" style="margin-top:18px;">Apply Filter</button>
                 </form>
 
@@ -219,6 +229,78 @@
                     </table>
                 </div>
             </div>
+
+            <!-- 4. TOP SALES MODULE -->
+            <div th:if="${module == 'top-sales'}">
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:15px;">
+                    <div>
+                        <h3>Top Sales Category & Products</h3>
+                        <p style="color:#64748b; margin: 4px 0 0;">Ranked by total units sold across all purchases.</p>
+                    </div>
+                    <form action="/staff/dashboard" method="GET" style="display:flex; gap:10px; max-width:350px;">
+                        <input type="hidden" name="module" value="top-sales">
+                        <input type="text" name="search" th:value="${search}" placeholder="Search category, product, user..." class="form-control">
+                        <button type="submit" class="btn btn-primary">Search</button>
+                    </form>
+                </div>
+
+                <!-- Empty state -->
+                <div th:if="${#lists.isEmpty(topSales)}"
+                     style="background:#fff; border:1px solid var(--border); border-radius:8px; padding:40px; text-align:center; color:#94a3b8; margin-top:1rem;">
+                    <p style="font-size:2rem;">📦</p>
+                    <p style="margin-top:8px; font-weight:600;">No sales recorded yet.</p>
+                    <p style="font-size:0.85rem;">Sales data will appear here once customers complete purchases.</p>
+                </div>
+
+                <!-- Rankings table -->
+                <div class="table-card" th:unless="${#lists.isEmpty(topSales)}">
+                    <table class="data-table">
+                        <thead>
+                        <tr>
+                            <th style="width:60px;">Rank</th>
+                            <th>Category</th>
+                            <th>Product Name</th>
+                            <th>User Buy (Buyer)</th>
+                            <th style="text-align:right;">Units Sold</th>
+                            <th>Performance</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="item : ${topSales}">
+                            <td>
+                                <span th:if="${item.rank == 1}" style="font-size:1.3rem;">🥇</span>
+                                <span th:if="${item.rank == 2}" style="font-size:1.3rem;">🥈</span>
+                                <span th:if="${item.rank == 3}" style="font-size:1.3rem;">🥉</span>
+                                <strong th:if="${item.rank > 3}" th:text="${'#' + item.rank}"
+                                        style="color:#64748b;"></strong>
+                            </td>
+                            <td>
+                                <a th:href="@{/staff/dashboard(module='categories', filterCategory=${item.categoryId})}"
+                                   th:text="${item.categoryName}"
+                                   style="color:var(--primary); font-weight:bold; text-decoration:none;">Category</a>
+                            </td>
+                            <td th:text="${item.productName}">Product Name</td>
+                            <td>
+                                <span style="background:#e0f2fe; color:#0369a1; padding:3px 8px; border-radius:12px; font-weight:600; font-size:0.85rem;" th:text="${item.userBuy}">User Buy</span>
+                            </td>
+                            <td style="text-align:right; font-weight:bold; color:var(--primary);"
+                                th:text="${item.totalSold}">0
+                            </td>
+                            <td>
+                                <div style="background:#e2e8f0; border-radius:20px; height:10px; width:100%; max-width:200px;">
+                                    <div th:if="${topSales.size() > 0 && topSales[0].totalSold > 0}"
+                                         th:with="percentage=${item.totalSold * 100 / topSales[0].totalSold}"
+                                         th:style="'background:var(--primary); height:10px; border-radius:20px; width:' + ${percentage} + '%'"></div>
+                                    <div th:if="${topSales.size() == 0 || topSales[0].totalSold == 0}"
+                                         style="background:var(--primary); height:10px; border-radius:20px; width:0%"></div>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
 
         </div>
     </main>

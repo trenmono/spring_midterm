@@ -60,13 +60,23 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     @Override
-    public List<Product> filterExpiredProducts(Integer expMonth, Integer expYear, String category) {
+    public List<Product> filterExpiredProducts(Integer expMonth, Integer expYear, String category, String search) {
         try {
             List<Product> allProducts = productRepository.findAll();
             LocalDate today = LocalDate.now();
             
             return allProducts.stream()
                     .filter(product -> {
+                        // Search filter
+                        if (search != null && !search.trim().isEmpty()) {
+                            String query = search.trim().toLowerCase();
+                            boolean matchName = product.getPName() != null && product.getPName().toLowerCase().contains(query);
+                            boolean matchCategory = product.getProductCategory() != null && product.getProductCategory().getCategoryName() != null && product.getProductCategory().getCategoryName().toLowerCase().contains(query);
+                            if (!matchName && !matchCategory) {
+                                return false;
+                            }
+                        }
+
                         if (product.getExpireDate() == null || product.getExpireDate().trim().isEmpty()) {
                             return false;
                         }
@@ -107,24 +117,59 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     @Override
-    public List<CategorySalesDTO> getTopSalesRanked() {
+    public List<Product> filterExpiredProducts(Integer expMonth, Integer expYear, String category) {
+        return filterExpiredProducts(expMonth, expYear, category, null);
+    }
+
+    @Override
+    public List<CategorySalesDTO> getTopSalesRanked(String search) {
         try {
-            List<Object[]> results = saleRepository.findTopSalesByCategory();
+            List<Object[]> results;
+            try {
+                results = saleRepository.findTopSalesDetailed();
+            } catch (Exception e) {
+                results = saleRepository.findTopSalesByCategory();
+            }
+
             List<CategorySalesDTO> topSales = new java.util.ArrayList<>();
             
-            int rank = 1;
             for (Object[] row : results) {
                 Integer catId = ((Number) row[0]).intValue();
-                String catName = (String) row[1];
-                Integer totalQuantity = ((Number) row[2]).intValue();
-                CategorySalesDTO dto = new CategorySalesDTO(catId, catName, totalQuantity);
-                dto.setRank(rank++);
+                String catName = row[1] != null ? row[1].toString() : "Uncategorized";
+                String productName = row.length > 3 ? (row[2] != null ? row[2].toString() : "N/A") : "N/A";
+                String userBuy = row.length > 3 ? (row[3] != null ? row[3].toString() : "") : "";
+                Integer totalQuantity = row.length > 4 ? ((Number) row[4]).intValue() : (row.length > 2 ? ((Number) row[2]).intValue() : 0);
+
+                CategorySalesDTO dto = new CategorySalesDTO(catId, catName, productName, userBuy, totalQuantity);
                 topSales.add(dto);
             }
-            
+
+
+
+
+            if (search != null && !search.trim().isEmpty()) {
+                String query = search.trim().toLowerCase();
+                topSales = topSales.stream()
+                        .filter(dto -> (dto.getCategoryName() != null && dto.getCategoryName().toLowerCase().contains(query)) ||
+                                       (dto.getProductName() != null && dto.getProductName().toLowerCase().contains(query)) ||
+                                       (dto.getUserBuy() != null && dto.getUserBuy().toLowerCase().contains(query)))
+                        .collect(Collectors.toList());
+            }
+
+            int rank = 1;
+            for (CategorySalesDTO dto : topSales) {
+                dto.setRank(rank++);
+            }
+
             return topSales;
         } catch (Exception e) {
             return List.of();
         }
     }
+
+    @Override
+    public List<CategorySalesDTO> getTopSalesRanked() {
+        return getTopSalesRanked(null);
+    }
 }
+

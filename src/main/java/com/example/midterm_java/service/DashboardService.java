@@ -14,16 +14,21 @@ public interface DashboardService {
     Staff getTopSeller();
 
     /**
-     * Filter products by expiration date (month and year)
-     * @param expMonth the expiration month (1-12), or null for all months
-     * @param expYear the expiration year, or null for all years
-     * @param category optional category filter
-     * @return list of expired or expiring products
+     * Filter products by expiration date (month and year) and optional search keyword
      */
-    List<Product> filterExpiredProducts(Integer expMonth, Integer expYear, String category);
+    List<Product> filterExpiredProducts(Integer expMonth, Integer expYear, String category, String search);
+
+    default List<Product> filterExpiredProducts(Integer expMonth, Integer expYear, String category) {
+        return filterExpiredProducts(expMonth, expYear, category, null);
+    }
 
     /**
-     * Get top sales ranked by category
+     * Get top sales ranked with optional search filtering (category, product, buyer user)
      */
-    List<CategorySalesDTO> getTopSalesRanked();
+    List<CategorySalesDTO> getTopSalesRanked(String search);
+
+    default List<CategorySalesDTO> getTopSalesRanked() {
+        return getTopSalesRanked(null);
+    }
 }
+

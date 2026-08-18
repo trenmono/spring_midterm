@@ -41,28 +41,41 @@ public class StaffDashboardController {
             @RequestParam(required = false) Integer filterCategory,
             @RequestParam(required = false) Integer expMonth,
             @RequestParam(required = false) Integer expYear,
+            @RequestParam(required = false) String search,
             Model model
     ) {
         model.addAttribute("module", module);
         model.addAttribute("action", action);
+        model.addAttribute("search", search);
         model.addAttribute("categories", categoryRepository.findAllByOrderByCatIdAsc());
         model.addAttribute("topSeller", dashboardService.getTopSeller());
 
         switch (module.toLowerCase()) {
-            case "categories" -> loadCategories(model, action, id, filterCategory);
-            case "expired" -> loadExpired(model, filterCategory, expMonth, expYear);
-            case "top-sales" -> loadTopSales(model);
-            default -> loadProducts(model, action, id, filterCategory);
+            case "categories" -> loadCategories(model, action, id, filterCategory, search);
+            case "expired" -> loadExpired(model, filterCategory, expMonth, expYear, search);
+            case "top-sales" -> loadTopSales(model, search);
+            default -> loadProducts(model, action, id, filterCategory, search);
         }
 
         return "staff/dashboard";
     }
 
-    private void loadProducts(Model model, String action, Integer id, Integer filterCategory) {
+    private void loadProducts(Model model, String action, Integer id, Integer filterCategory, String search) {
+        model.addAttribute("filterCategory", filterCategory);
+
         if (filterCategory != null) {
             Category cat = categoryRepository.findById(filterCategory).orElse(null);
-            model.addAttribute("products", cat != null ? productRepository.findByCategory(cat) : Collections.emptyList());
-            model.addAttribute("filterCategory", filterCategory);
+            if (cat != null) {
+                if (search != null && !search.trim().isEmpty()) {
+                    model.addAttribute("products", productRepository.findByPNameContainingIgnoreCaseAndCategory(search.trim(), cat));
+                } else {
+                    model.addAttribute("products", productRepository.findByCategory(cat));
+                }
+            } else {
+                model.addAttribute("products", Collections.emptyList());
+            }
+        } else if (search != null && !search.trim().isEmpty()) {
+            model.addAttribute("products", productRepository.findByPNameContainingIgnoreCase(search.trim()));
         } else {
             model.addAttribute("products", productRepository.findAll());
         }
@@ -72,7 +85,13 @@ public class StaffDashboardController {
         }
     }
 
-    private void loadCategories(Model model, String action, Integer id, Integer filterCategory) {
+    private void loadCategories(Model model, String action, Integer id, Integer filterCategory, String search) {
+        if (search != null && !search.trim().isEmpty()) {
+            model.addAttribute("categories", categoryRepository.findByCategoryNameContainingIgnoreCase(search.trim()));
+        } else {
+            model.addAttribute("categories", categoryRepository.findAllByOrderByCatIdAsc());
+        }
+
         if (filterCategory != null) {
             Category cat = categoryRepository.findById(filterCategory).orElse(null);
             model.addAttribute("categoryProducts", cat != null ? productRepository.findByCategory(cat) : Collections.emptyList());
@@ -86,12 +105,11 @@ public class StaffDashboardController {
         }
     }
 
-    private void loadExpired(Model model, Integer filterCategory, Integer expMonth, Integer expYear) {
+    private void loadExpired(Model model, Integer filterCategory, Integer expMonth, Integer expYear, String search) {
         model.addAttribute("filterCategory", filterCategory);
         model.addAttribute("expMonth", expMonth);
         model.addAttribute("expYear", expYear);
         
-        // Convert filterCategory ID to category name string
         String categoryName = null;
         if (filterCategory != null) {
             Category cat = categoryRepository.findById(filterCategory).orElse(null);
@@ -100,10 +118,11 @@ public class StaffDashboardController {
             }
         }
         
-        model.addAttribute("expiredProducts", dashboardService.filterExpiredProducts(expMonth, expYear, categoryName));
+        model.addAttribute("expiredProducts", dashboardService.filterExpiredProducts(expMonth, expYear, categoryName, search));
     }
 
-    private void loadTopSales(Model model) {
-        model.addAttribute("topSales", dashboardService.getTopSalesRanked());
+    private void loadTopSales(Model model, String search) {
+        model.addAttribute("topSales", dashboardService.getTopSalesRanked(search));
     }
 }
+
