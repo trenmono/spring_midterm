@@ -1,8 +1,14 @@
 package com.example.midterm_java.model;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
+@AllArgsConstructor
+@NoArgsConstructor
+@Data
 public class Staff {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -13,18 +19,8 @@ public class Staff {
     private String password;
 
     @ManyToOne
-    @JoinColumn(name ="role_Id")
+    @JoinColumn(name = "role_Id")
     private Role role;
-
-    public Staff() {
-    }
-
-    public Staff(int sId, String userName, String password, Role role) {
-        this.sId = sId;
-        this.userName = userName;
-        this.password = password;
-        this.role = role;
-    }
 
     public int getSId() {
         return sId;
@@ -34,12 +30,28 @@ public class Staff {
         this.sId = sId;
     }
 
+    public Integer getId() {
+        return sId;
+    }
+
+    public void setId(int id) {
+        this.sId = id;
+    }
+
     public String getUserName() {
         return userName;
     }
 
     public void setUserName(String userName) {
         this.userName = userName;
+    }
+
+    public String getUsername() {
+        return userName;
+    }
+
+    public void setUsername(String username) {
+        this.userName = username;
     }
 
     public String getPassword() {
@@ -56,5 +68,9 @@ public class Staff {
 
     public void setRole(Role role) {
         this.role = role;
+    }
+
+    public String getRoleName() {
+        return role != null ? role.getRoleName() : "";
     }
 }

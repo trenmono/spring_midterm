@@ -1,11 +1,10 @@
 package com.example.midterm_java.model;
 
-public class ApiResponse<D> {
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-    private boolean success;
-    private int status;
-    private String message;
-    private D data;
+public class ApiResponse<D> {
 
     public ApiResponse() {
     }
@@ -16,6 +15,11 @@ public class ApiResponse<D> {
         this.message = message;
         this.data = data;
     }
+
+    private boolean success;
+    private int status;
+    private String message;
+    private D data;
 
     public static <D> ApiResponse<D> success(int status, String message, D data) {
         return new ApiResponse<>(true, status, message, data);

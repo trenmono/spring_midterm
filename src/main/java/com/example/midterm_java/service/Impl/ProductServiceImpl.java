@@ -26,7 +26,7 @@ public class ProductServiceImpl implements ProductService {
     public ResponseEntity<ApiResponse<Product>> addProduct(Product product) {
         if (product == null || product.getPName() == null || product.getPName().trim().isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ApiResponse<>(
+                    .body(new ApiResponse<Product>(
                             false,
                             400,
                             "Invalid product name",
@@ -37,7 +37,7 @@ public class ProductServiceImpl implements ProductService {
         boolean checkProductName = productRepository.existsByPName(product.getPName());
         if (checkProductName) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(new ApiResponse<>(
+                    .body(new ApiResponse<Product>(
                             false,
                             409,
                             "Product name already exists",
@@ -47,7 +47,7 @@ public class ProductServiceImpl implements ProductService {
 
         Product saved = productRepository.save(product);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ApiResponse<>(
+                .body(new ApiResponse<Product>(
                         true,
                         201,
                         "Product created successfully",
@@ -60,7 +60,7 @@ public class ProductServiceImpl implements ProductService {
         Optional<Product> existingProduct = productRepository.findById(product.getId());
         if (existingProduct.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse<>(
+                    .body(new ApiResponse<Void>(
                             false,
                             404,
                             "Product not found",
@@ -69,7 +69,7 @@ public class ProductServiceImpl implements ProductService {
         }
         productRepository.delete(existingProduct.get());
         return ResponseEntity.status(HttpStatus.OK)
-                .body(new ApiResponse<>(
+                .body(new ApiResponse<Void>(
                         true,
                         200,
                         "Product deleted successfully",
@@ -82,7 +82,7 @@ public class ProductServiceImpl implements ProductService {
         Optional<Product> existingProduct = productRepository.findById(product.getId());
         if (existingProduct.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse<>(
+                    .body(new ApiResponse<Product>(
                             false,
                             404,
                             "Product not found",
@@ -99,7 +99,7 @@ public class ProductServiceImpl implements ProductService {
         }
         Product savedProduct = productRepository.save(updatedProduct);
         return ResponseEntity.status(HttpStatus.OK)
-                .body(new ApiResponse<>(
+                .body(new ApiResponse<Product>(
                         true,
                         200,
                         "Product updated successfully",
@@ -112,14 +112,14 @@ public class ProductServiceImpl implements ProductService {
         Optional<Product> product = productRepository.findById(id);
         if (product.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse<>(
+                    .body(new ApiResponse<Optional<Product>>(
                             false,
                             404,
                             "Product not found",
                             null
                     ));
         }
-        return ResponseEntity.ok(new ApiResponse<>(
+        return ResponseEntity.ok(new ApiResponse<Optional<Product>>(
                         true,
                         200,
                         "Product found",
@@ -132,14 +132,14 @@ public class ProductServiceImpl implements ProductService {
         List<Product> products = productRepository.findByPName(name);
         if (products.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse<>(
+                    .body(new ApiResponse<List<Product>>(
                             false,
                             404,
                             "Product not found",
                             null
                     ));
         }
-        return ResponseEntity.ok(new ApiResponse<>(
+        return ResponseEntity.ok(new ApiResponse<List<Product>>(
                         true,
                         200,
                         "Products found",
@@ -152,14 +152,14 @@ public class ProductServiceImpl implements ProductService {
         List<Product> products = productRepository.findByCategoryCategoryName(category);
         if (products.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse<>(
+                    .body(new ApiResponse<List<Product>>(
                             false,
                             404,
                             "Products not found",
                             null
                     ));
         }
-        return ResponseEntity.ok(new ApiResponse<>(
+        return ResponseEntity.ok(new ApiResponse<List<Product>>(
                         true,
                         200,
                         "Products found",
