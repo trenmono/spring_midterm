@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css">
+</head>
+<body>
+<div th:if="${toastMessage}" id="toast" th:class="'toast-popup toast-' + ${toastType}" th:text="${toastMessage}"></div>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<div class="app-container">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header"><span class="brand-dot"></span> Admin Control</div>
+        
+        <ul class="sidebar-menu">
+            <li th:classappend="${module == 'users'} ? 'active'"><a href="/admin/dashboard?module=users"><span
+                    class="menu-icon">👥</span> User Management</a></li>
+            <li th:classappend="${module == 'products'} ? 'active'"><a href="/admin/dashboard?module=products"><span
+                    class="menu-icon">📦</span> Product Management</a></li>
+            <li th:classappend="${module == 'categories'} ? 'active'"><a href="/admin/dashboard?module=categories"><span
+                    class="menu-icon">🗂️</span> Category Management</a></li>
+            <li th:classappend="${module == 'expired'} ? 'active'"><a href="/admin/dashboard?module=expired"><span
+                    class="menu-icon">⏰</span> Expired Products</a></li>
+            <li th:classappend="${module == 'top-sales'} ? 'active'"><a href="/admin/dashboard?module=top-sales"><span
+                    class="menu-icon">📈</span> Top Sales Category</a></li>
+        </ul>
+        <!-- Bottom Sidebar Logout -->
+        <div class="logout-sidebar">
+            <a href="/logout" class="logout-btn">Logout</a>
+        </div>
+    </aside>
+
+    <!-- Main Panel -->
+    <main class="main-content">
+        <header class="top-nav">
+            <div class="top-nav-left">
+                <button type="button" class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle navigation"
+                        aria-expanded="false">☰
+                </button>
+                <h2>Administrator Control Panel</h2>
+            </div>
+            <span>Logged in as: <strong>ADMIN</strong></span>
+        </header>
+
+        <div class="content-area">
+
+            <!-- 1. USER MANAGEMENT -->
+            <div th:if="${module == 'users'}">
+                <div th:if="${action == 'list'}">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
+                        <h3>System Users</h3>
+                        <a href="/admin/dashboard?module=users&action=add" class="btn btn-add">+ Add User</a>
+                    </div>
+                    <div class="table-card">
+                        <table class="data-table">
+                            <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Username</th>
+                                <th>Role</th>
+                                <th>Action</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="u : ${users}">
+                                <td th:text="${u.id}"></td>
+                                <td th:text="${u.userName}"></td>
+                                <td th:text="${u.role.roleName}"></td>
+                                <td>
+                                    <a th:href="@{/admin/dashboard(module='users', action='edit', id=${u.id})}"
+                                       class="btn btn-edit">Edit</a>
+                                    <a th:href="@{/admin/users/delete/{id}(id=${u.id})}"
+                                       class="btn btn-delete">Delete</a>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- User Add/Edit Sub-form -->
+                <div th:if="${action == 'add' or action == 'edit'}" class="form-card">
+                    <a href="/admin/dashboard?module=users" class="btn btn-primary" style="margin-bottom:15px;">←
+                        Back</a>
+                    <h3 th:text="${action == 'add'} ? 'Add New User' : 'Edit User'"></h3>
+                    <form action="/admin/users/save" method="POST">
+                        <input type="hidden" name="id" th:value="${editUser?.id}">
+                        <div class="form-group"><label>Username</label><input type="text" name="username"
+                                                                              th:value="${editUser?.userName}"
+                                                                              class="form-control" required></div>
+                        <div class="form-group"><label>Password</label><input type="password" name="password"
+                                                                              th:value="${editUser?.password}"
+                                                                              class="form-control" required></div>
+                        <div class="form-group">
+                            <label>Role</label>
+                            <select name="role" class="form-control">
+                                <option value="ADMIN" th:selected="${editUser?.role?.roleName == 'ADMIN'}">ADMIN
+                                </option>
+                                <option value="STAFF" th:selected="${editUser?.role?.roleName == 'STAFF'}">STAFF
+                                </option>
+                                <option value="USER" th:selected="${editUser?.role?.roleName == 'USER'}">USER</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-add">Save User</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 2. PRODUCT MANAGEMENT -->
+            <div th:if="${module == 'products'}">
+                <div th:if="${action == 'list'}">
+                    <div style="display:flex; justify-content:space-between;">
+                        <h3>Product Inventory</h3>
+                        <a href="/admin/dashboard?module=products&action=add" class="btn btn-add">+ Add Product</a>
+                    </div>
+                    <div class="table-card">
+                        <table class="data-table">
+                            <thead>
+                            <tr>
+                                <th>PID</th>
+                                <th>Image</th>
+                                <th>Name</th>
+                                <th>Qty</th>
+                                <th>Price</th>
+                                <th>Expired Date</th>
+                                <th>Action</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="p : ${products}">
+                                <td th:text="${p.pId}"></td>
+                                <td>
+                                    <img th:src="@{'/images/' + ${p.imageName}}" alt="Product Image"
+                                         style="width:45px; height:45px; object-fit:cover; border-radius:6px; border:1px solid #e2e8f0;">
+                                </td>
+                                <td th:text="${p.pName}"></td>
+                                <td th:text="${p.qty}"></td>
+                                <td th:text="${'$' + p.price}"></td>
+                                <td th:text="${p.expireDate}"></td>
+                                <td>
+                                    <a th:href="@{/admin/dashboard(module='products', action='edit', id=${p.id})}"
+                                       class="btn btn-edit">Edit</a>
+                                    <a th:href="@{/products/delete/{id}(id=${p.id}, sourceRole='ADMIN')}"
+                                       class="btn btn-delete">Delete</a>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <!-- Product Sub-form with Dynamic Category Dropdown -->
+                <div th:if="${action == 'add' or action == 'edit'}" class="form-card">
+                    <a href="/admin/dashboard?module=products" class="btn btn-primary" style="margin-bottom:15px;">←
+                        Back</a>
+                    <h3 th:text="${action == 'add'} ? 'Add New Product' : 'Edit Product'"></h3>
+                    <form action="/products/save" method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="sourceRole" value="ADMIN">
+                        <input type="hidden" name="id" th:value="${editProduct?.pId}">
+                        <div class="form-group"><label>Product Name</label><input type="text" name="name"
+                                                                                  th:value="${editProduct?.pName}"
+                                                                                  class="form-control" required></div>
+                        <div class="form-group">
+                            <label>Product Image</label>
+                            <input type="file" name="imageFile" accept="image/*" class="form-control">
+                            <input type="hidden" name="imageName" th:value="${editProduct?.imageName}">
+                            <small th:if="${editProduct?.imageName}" style="color:#64748b;"
+                                   th:text="'Current: ' + ${editProduct.imageName}"></small>
+                        </div>
+                        <div class="form-group"><label>Quantity</label><input type="number" name="quantity"
+                                                                              th:value="${editProduct?.qty}"
+                                                                              class="form-control" required></div>
+                        <div class="form-group"><label>Price ($)</label><input type="number" step="0.01" name="price"
+                                                                               th:value="${editProduct?.price}"
+                                                                               class="form-control" required></div>
+                        <div class="form-group"><label>Expiration Date</label><input type="date" name="expiredDate"
+                                                                                     th:value="${editProduct?.expireDate}"
+                                                                                     class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select name="categoryId" class="form-control" required>
+                                <option value="">-- Select Category --</option>
+                                <option th:each="cat : ${categories}" th:value="${cat.catId}"
+                                        th:text="${cat.categoryName}"
+                                        th:selected="${editProduct?.categoryId == cat.catId}"></option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-add">Save Product</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 3. CATEGORY MANAGEMENT -->
+            <div th:if="${module == 'categories'}">
+                <div th:if="${action == 'list'}">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
+                        <h3>Categories</h3>
+                        <a href="/admin/dashboard?module=categories&action=add" class="btn btn-add">+ Add Category</a>
+                    </div>
+                    <div class="table-card" style="margin-bottom:20px;">
+                        <table class="data-table">
+                            <thead>
+                            <tr>
+                                <th>CatID</th>
+                                <th>Name</th>
+                                <th>Action</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="c : ${categories}">
+                                <td th:text="${c.catId}"></td>
+                                <td th:text="${c.categoryName}"></td>
+                                <td>
+                                    <a th:href="@{/admin/dashboard(module='categories', action='edit', id=${c.catId})}"
+                                       class="btn btn-edit">Edit</a>
+                                    <a th:href="@{/categories/delete/{id}(id=${c.catId}, sourceRole='ADMIN')}"
+                                       class="btn btn-delete">Delete</a>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Category Filter Selector -->
+                    <h3>Filter Products by Category</h3>
+                    <form action="/admin/dashboard" method="GET" style="margin-top:10px; display:flex; gap:10px;">
+                        <input type="hidden" name="module" value="categories">
+                        <select name="filterCategory" class="form-control" style="width:250px;">
+                            <option value="">Show All Categories</option>
+                            <option th:each="cat : ${categories}" th:value="${cat.catId}" th:text="${cat.categoryName}"
+                                    th:selected="${filterCategory == cat.catId}"></option>
+                        </select>
+                        <button type="submit" class="btn btn-primary">Filter</button>
+                    </form>
+
+                    <div class="table-card">
+                        <table class="data-table">
+                            <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Price</th>
+                                <th>Stock</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="p : ${categoryProducts}">
+                                <td th:text="${p.name}"></td>
+                                <td th:text="${'$' + p.price}"></td>
+                                <td th:text="${p.quantity}"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Category Add/Edit Sub-form -->
+                <div th:if="${action == 'add' or action == 'edit'}" class="form-card">
+                    <a href="/admin/dashboard?module=categories" class="btn btn-primary" style="margin-bottom:15px;">←
+                        Back</a>
+                    <h3 th:text="${action == 'add'} ? 'Add Category' : 'Edit Category'"></h3>
+                    <form action="/categories/save" method="POST">
+                        <input type="hidden" name="sourceRole" value="ADMIN">
+                        <input type="hidden" name="id" th:value="${editCategory?.catId}">
+                        <div class="form-group"><label>Category Name</label><input type="text" name="name"
+                                                                                   th:value="${editCategory?.categoryName}"
+                                                                                   class="form-control" required></div>
+                        <button type="submit" class="btn btn-add">Save Category</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 4. EXPIRED PRODUCTS WITH SINGLE-INPUT FILTER -->
+            <div th:if="${module == 'expired'}">
+                <h3>Expired Product Monitoring</h3>
+                <form action="/admin/dashboard" method="GET"
+                      style="margin: 15px 0; display:flex; gap:15px; align-items:center;">
+                    <input type="hidden" name="module" value="expired">
+                    <div><label>Years:</label> <input type="number" id="yInput" name="expYear" th:value="${expYear}" class="form-control"
+                                                      style="width:100px;"></div>
+                    <div><label>Months:</label> <input type="number" id="mInput" name="expMonth" th:value="${expMonth}" class="form-control"
+                                                       style="width:100px;"></div>
+                    <button type="submit" class="btn btn-primary" style="margin-top:18px;">Apply Filter</button>
+                </form>
+
+                <div class="table-card">
+                    <table class="data-table">
+                        <thead>
+                        <tr>
+                            <th>PID</th>
+                            <th>Name</th>
+                            <th>Expiration Date</th>
+                            <th>Status</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="p : ${expiredProducts}">
+                            <td th:text="${p.pId}"></td>
+                            <td th:text="${p.pName}"></td>
+                            <td th:text="${p.expireDate}"></td>
+                            <td style="color:var(--danger); font-weight:bold;">EXPIRED / DUE</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 5. TOP SALES -->
+            <div th:if="${module == 'top-sales'}">
+                <h3>Top Sales Categories</h3>
+                <p style="color:#64748b; margin: 8px 0 16px;">Ranked by total units sold across all purchases.</p>
+
+                <!-- Empty state -->
+                <div th:if="${#lists.isEmpty(topSales)}"
+                     style="background:#fff; border:1px solid var(--border); border-radius:8px; padding:40px; text-align:center; color:#94a3b8; margin-top:1rem;">
+                    <p style="font-size:2rem;">📦</p>
+                    <p style="margin-top:8px; font-weight:600;">No sales recorded yet.</p>
+                    <p style="font-size:0.85rem;">Sales data will appear here once customers complete purchases.</p>
+                </div>
+
+                <!-- Rankings table -->
+                <div class="table-card" th:unless="${#lists.isEmpty(topSales)}">
+                    <table class="data-table">
+                        <thead>
+                        <tr>
+                            <th style="width:60px;">Rank</th>
+                            <th>Category</th>
+                            <th style="text-align:right;">Units Sold</th>
+                            <th>Performance</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="item : ${topSales}">
+                            <!-- Rank badge -->
+                            <td>
+                                <span th:if="${item.rank == 1}" style="font-size:1.3rem;">🥇</span>
+                                <span th:if="${item.rank == 2}" style="font-size:1.3rem;">🥈</span>
+                                <span th:if="${item.rank == 3}" style="font-size:1.3rem;">🥉</span>
+                                <strong th:if="${item.rank > 3}" th:text="${'#' + item.rank}"
+                                        style="color:#64748b;"></strong>
+                            </td>
+                            <td>
+                                <a th:href="@{/admin/dashboard(module='categories', filterCategory=${item.categoryId})}"
+                                   th:text="${item.categoryName}"
+                                   style="color:var(--primary); font-weight:bold; text-decoration:none;">Category</a>
+                            </td>
+                            <td style="text-align:right; font-weight:bold; color:var(--primary);"
+                                th:text="${item.totalSold}">0
+                            </td>
+                            <td>
+                                <!-- Progress bar scaled to the top seller's count -->
+                                <div style="background:#e2e8f0; border-radius:20px; height:10px; width:100%; max-width:200px;">
+                                    <div th:if="${topSales.size() > 0 && topSales[0].totalSold > 0}"
+                                         th:with="percentage=${item.totalSold * 100 / topSales[0].totalSold}"
+                                         th:style="'background:var(--primary); height:10px; border-radius:20px; width:' + ${percentage} + '%'"></div>
+                                    <div th:if="${topSales.size() == 0 || topSales[0].totalSold == 0}"
+                                         style="background:var(--primary); height:10px; border-radius:20px; width:0%"></div>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<script th:src="@{/js/sidebar.js}" src="/js/sidebar.js"></script>
+<script th:src="@{/js/admin-dashboard.js}" src="/js/admin-dashboard.js"></script>
+</body>
+</html>

@@ -27,7 +27,7 @@ public class StaffServiceImpl implements StaffService {
         if(staff == null || staff.getUserName() == null || staff.getUserName().trim().isEmpty() ||
            staff.getPassword() == null || staff.getPassword().trim().isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ApiResponse<>(
+                    .body(new ApiResponse<Staff>(
                             false,
                             400,
                             "Invalid username or password",
@@ -37,7 +37,7 @@ public class StaffServiceImpl implements StaffService {
         boolean checkStaff = staffRepository.existsByUserName(staff.getUserName());
         if(checkStaff) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(new ApiResponse<>(
+                    .body(new ApiResponse<Staff>(
                             false,
                             409,
                             "User name already exists",
@@ -46,7 +46,7 @@ public class StaffServiceImpl implements StaffService {
         }
         Staff savedStaff = staffRepository.save(staff);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ApiResponse<>(
+                .body(new ApiResponse<Staff>(
                         true,
                         201,
                         "Staff Created Successfully",
@@ -59,7 +59,7 @@ public class StaffServiceImpl implements StaffService {
         Optional<Staff> existingStaff = staffRepository.findBySId(staff.getSId());
         if(existingStaff.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse<>(
+                    .body(new ApiResponse<Staff>(
                             false,
                             404,
                             "Staff not Found",
@@ -72,7 +72,7 @@ public class StaffServiceImpl implements StaffService {
         updatedStaff.setRole(staff.getRole());
         Staff savedStaff = staffRepository.save(updatedStaff);
         return ResponseEntity.status(HttpStatus.OK)
-                .body(new ApiResponse<>(
+                .body(new ApiResponse<Staff>(
                         true,
                         200,
                         "Staff updated successfully",
@@ -85,7 +85,7 @@ public class StaffServiceImpl implements StaffService {
         Optional<Staff> existingStaff = staffRepository.findBySId(staff.getSId());
         if(existingStaff.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse<>(
+                    .body(new ApiResponse<Void>(
                             false,
                             404,
                             "Staff not Found",
@@ -94,7 +94,7 @@ public class StaffServiceImpl implements StaffService {
         }
         staffRepository.delete(existingStaff.get());
         return ResponseEntity.status(HttpStatus.OK)
-                .body(new ApiResponse<>(
+                .body(new ApiResponse<Void>(
                         true,
                         200,
                         "Staff deleted successfully",
@@ -116,14 +116,14 @@ public class StaffServiceImpl implements StaffService {
         Optional<Staff> staff = staffRepository.findBySId(id);
         if (staff.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse<>(
+                    .body(new ApiResponse<Staff>(
                             false,
                             404,
                             "Staff not found",
                             null
                     ));
         }
-        return ResponseEntity.ok(new ApiResponse<>(
+        return ResponseEntity.ok(new ApiResponse<Staff>(
                         true,
                         200,
                         "Staff found",
@@ -136,14 +136,14 @@ public class StaffServiceImpl implements StaffService {
         List<Staff> staff = staffRepository.findByUserNameContaining(name);
         if(staff.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse<>(
+                    .body(new ApiResponse<List<Staff>>(
                             false,
                             404,
                             "Staff not found",
                             null
                     ));
         }
-        return ResponseEntity.ok(new ApiResponse<>(
+        return ResponseEntity.ok(new ApiResponse<List<Staff>>(
                         true,
                         200,
                         "Staff Found",

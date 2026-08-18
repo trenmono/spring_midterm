@@ -2,17 +2,21 @@ package com.example.midterm_java.controller;
 
 import com.example.midterm_java.model.Product;
 import com.example.midterm_java.repository.ProductRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/products")
+@RequestMapping("/api/products")
+//@RequiredArgsConstructor
 public class ProductController {
 
-    @Autowired
-    private ProductRepository productRepository;
+    private final ProductRepository productRepository;
+
+    public ProductController(ProductRepository productRepository) {
+        this.productRepository = productRepository;
+    }
 
     @GetMapping
     public List<Product> getAllProducts(@RequestParam(required = false) String name) {
@@ -36,22 +40,16 @@ public class ProductController {
         return list;
     }
 
-    @GetMapping("/by-name/{name}")
+    @GetMapping("/search/{name}")
     public List<Product> getProductByNamePath(@PathVariable String name) {
         return getProductByName(name);
     }
-
-    @GetMapping("/search")
-    public List<Product> searchProductByName(@RequestParam String name) {
-        return getProductByName(name);
-    }
-
     @PostMapping
     public Product createProduct(@RequestBody Product product) {
         return productRepository.save(product);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/update/{id}")
     public Product updateProduct(
             @PathVariable Integer id,
             @RequestBody Product product
@@ -72,7 +70,7 @@ public class ProductController {
         return null;
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public String deleteProduct(@PathVariable Integer id) {
         productRepository.deleteById(id);
         return "Product deleted successfully";

@@ -1,19 +1,22 @@
 package com.example.midterm_java.controller;
 
 import com.example.midterm_java.model.Staff;
-import com.example.midterm_java.service.AuthService;
-import org.springframework.beans.factory.annotation.Autowired;
 import com.example.midterm_java.repository.AuthRepository;
+import com.example.midterm_java.service.AuthService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
+//@RequiredArgsConstructor
 public class AuthController {
-    @Autowired
-    private AuthService authService;
+    private final AuthService authService;
+    private final AuthRepository authRepository;
 
-    @Autowired
-    private AuthRepository authRepository;
+    public AuthController(AuthService authService, AuthRepository authRepository) {
+        this.authService = authService;
+        this.authRepository = authRepository;
+    }
 
     @PostMapping("/login")
     public Staff login(@RequestParam String username, @RequestParam String password) {

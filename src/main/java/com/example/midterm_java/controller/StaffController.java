@@ -37,13 +37,8 @@ public class StaffController {
         return list;
     }
 
-    @GetMapping("/by-name/{name}")
+    @GetMapping("/search/{name}")
     public List<Staff> getStaffByNamePath(@PathVariable String name) {
-        return getStaffByName(name);
-    }
-
-    @GetMapping("/search")
-    public List<Staff> searchStaffByName(@RequestParam String name) {
         return getStaffByName(name);
     }
 
@@ -52,7 +47,7 @@ public class StaffController {
         return staffRepository.save(staff);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/update/{id}")
     public Staff updateStaff(
             @PathVariable Integer id,
             @RequestBody Staff staff
@@ -69,7 +64,7 @@ public class StaffController {
         return null;
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public String deleteStaff(@PathVariable Integer id) {
         staffRepository.deleteById(id);
         return "Staff deleted successfully";
