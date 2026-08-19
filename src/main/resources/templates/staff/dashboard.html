@@ -15,13 +15,13 @@
 
         <ul class="sidebar-menu">
             <li th:classappend="${module == 'products'} ? 'active'"><a href="/staff/dashboard?module=products"><span
-                    class="menu-icon">📦</span> Product Management</a></li>
+                    class="menu-icon">&#x1F4E6;</span> Product Management</a></li>
             <li th:classappend="${module == 'categories'} ? 'active'"><a href="/staff/dashboard?module=categories"><span
-                    class="menu-icon">🗂️</span> Category Management</a></li>
+                    class="menu-icon">&#x1F5C2;&#xFE0F;</span> Category Management</a></li>
             <li th:classappend="${module == 'expired'} ? 'active'"><a href="/staff/dashboard?module=expired"><span
-                    class="menu-icon">⏰</span> Expired Products</a></li>
+                    class="menu-icon">&#x23F0;</span> Expired Products</a></li>
             <li th:classappend="${module == 'top-sales'} ? 'active'"><a href="/staff/dashboard?module=top-sales"><span
-                    class="menu-icon">📈</span> Top Sales Category</a></li>
+                    class="menu-icon">&#x1F4C8;</span> Top Sales Category</a></li>
         </ul>
         <!-- Bottom Sidebar Logout -->
         <div class="logout-sidebar">
@@ -33,7 +33,7 @@
         <header class="top-nav">
             <div class="top-nav-left">
                 <button type="button" class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle navigation"
-                        aria-expanded="false">☰
+                        aria-expanded="false">&#x2630;
                 </button>
                 <h2>Stock Management Panel</h2>
             </div>
@@ -46,7 +46,7 @@
                 <div th:if="${action == 'list'}">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <h3>Manage Products</h3>
-                        <a href="/staff/dashboard?module=products&action=add" class="btn btn-add">+ Add Product</a>
+                        <a href="/staff/dashboard?module=products&amp;action=add" class="btn btn-add">+ Add Product</a>
                     </div>
 
                     <!-- Product Category Filter Dropdown & Search Form -->
@@ -72,6 +72,7 @@
                                 <th>PID</th>
                                 <th>Image</th>
                                 <th>Name</th>
+                                <th>Category</th>
                                 <th>Qty</th>
                                 <th>Price</th>
                                 <th>Expired Date</th>
@@ -87,6 +88,7 @@
                                          style="width:45px; height:45px; object-fit:cover; border-radius:6px; border:1px solid #e2e8f0;">
                                 </td>
                                 <td th:text="${p.pName}"></td>
+                                <td th:text="${p.category != null ? p.category.categoryName : 'Uncategorized'}"></td>
                                 <td th:text="${p.qty}"></td>
                                 <td th:text="${'$' + p.price}"></td>
                                 <td th:text="${p.expireDate}"></td>
@@ -103,7 +105,7 @@
                 </div>
 
                 <div th:if="${action == 'add' or action == 'edit'}" class="form-card">
-                    <a href="/staff/dashboard?module=products" class="btn btn-primary" style="margin-bottom:15px;">←
+                    <a href="/staff/dashboard?module=products" class="btn btn-primary" style="margin-bottom:15px;">&#x2190;
                         Back</a>
                     <h3 th:text="${action == 'add'} ? 'Add Product' : 'Edit Product'"></h3>
                     <form action="/products/save" method="POST" enctype="multipart/form-data">
@@ -153,7 +155,7 @@
                             <input type="text" name="search" th:value="${search}" placeholder="Search category..." class="form-control">
                             <button type="submit" class="btn btn-primary">Search</button>
                         </form>
-                        <a href="/staff/dashboard?module=categories&action=add" class="btn btn-add">+ Add Category</a>
+                        <a href="/staff/dashboard?module=categories&amp;action=add" class="btn btn-add">+ Add Category</a>
                     </div>
                     <div class="table-card">
                         <table class="data-table">
@@ -181,7 +183,7 @@
                 </div>
 
                 <div th:if="${action == 'add' or action == 'edit'}" class="form-card">
-                    <a href="/staff/dashboard?module=categories" class="btn btn-primary" style="margin-bottom:15px;">←
+                    <a href="/staff/dashboard?module=categories" class="btn btn-primary" style="margin-bottom:15px;">&#x2190;
                         Back</a>
                     <form action="/categories/save" method="POST">
                         <input type="hidden" name="sourceRole" value="STAFF">
@@ -234,7 +236,7 @@
             <div th:if="${module == 'top-sales'}">
                 <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; margin-bottom:15px;">
                     <div>
-                        <h3>Top Sales Category & Products</h3>
+                        <h3>Top Sales Category &amp; Products</h3>
                         <p style="color:#64748b; margin: 4px 0 0;">Ranked by total units sold across all purchases.</p>
                     </div>
                     <form action="/staff/dashboard" method="GET" style="display:flex; gap:10px; max-width:350px;">
@@ -244,10 +246,43 @@
                     </form>
                 </div>
 
+                <!-- Category Filter Dropdown -->
+                <form action="/staff/dashboard" method="GET"
+                      style="margin-bottom:18px; display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                    <input type="hidden" name="module" value="top-sales">
+                    <input type="hidden" name="search" th:value="${search}">
+                    <label style="font-weight:600; color:#374151;">Filter by Category:</label>
+                    <select id="filterCategoryId" name="filterCategoryId" class="form-control" style="width:220px;"
+                            onchange="this.form.submit()">
+                        <option value="">All Categories</option>
+                        <option th:each="cat : ${categorySales}"
+                                th:value="${cat.categoryId}"
+                                th:text="${cat.categoryName}"
+                                th:selected="${filterCategoryId != null and filterCategoryId == cat.categoryId}">
+                        </option>
+                    </select>
+                    <a th:if="${filterCategoryId != null}"
+                       href="/staff/dashboard?module=top-sales"
+                       class="btn btn-clear">Clear Filter</a>
+                </form>
+
+                <!-- Inline chart data -->
+                <script th:inline="javascript">
+                    /*<![CDATA[*/
+                    var staffCategorySalesData = (function() {
+                        var raw = /*[[${categorySales}]]*/ [];
+                        if (!raw) return [];
+                        return raw.map(function(c) {
+                            return { label: c.categoryName || 'Uncategorized', value: Number(c.totalSold) || 0 };
+                        });
+                    })();
+                    /*]]>*/
+                </script>
+
                 <!-- Empty state -->
                 <div th:if="${#lists.isEmpty(topSales)}"
                      style="background:#fff; border:1px solid var(--border); border-radius:8px; padding:40px; text-align:center; color:#94a3b8; margin-top:1rem;">
-                    <p style="font-size:2rem;">📦</p>
+                    <p style="font-size:2rem;">&#x1F4E6;</p>
                     <p style="margin-top:8px; font-weight:600;">No sales recorded yet.</p>
                     <p style="font-size:0.85rem;">Sales data will appear here once customers complete purchases.</p>
                 </div>
@@ -268,9 +303,9 @@
                         <tbody>
                         <tr th:each="item : ${topSales}">
                             <td>
-                                <span th:if="${item.rank == 1}" style="font-size:1.3rem;">🥇</span>
-                                <span th:if="${item.rank == 2}" style="font-size:1.3rem;">🥈</span>
-                                <span th:if="${item.rank == 3}" style="font-size:1.3rem;">🥉</span>
+                                <span th:if="${item.rank == 1}" style="font-size:1.3rem;">&#x1F947;</span>
+                                <span th:if="${item.rank == 2}" style="font-size:1.3rem;">&#x1F948;</span>
+                                <span th:if="${item.rank == 3}" style="font-size:1.3rem;">&#x1F949;</span>
                                 <strong th:if="${item.rank > 3}" th:text="${'#' + item.rank}"
                                         style="color:#64748b;"></strong>
                             </td>
@@ -288,10 +323,10 @@
                             </td>
                             <td>
                                 <div style="background:#e2e8f0; border-radius:20px; height:10px; width:100%; max-width:200px;">
-                                    <div th:if="${topSales.size() > 0 && topSales[0].totalSold > 0}"
+                                    <div th:if="${topSales.size() > 0 and topSales[0].totalSold > 0}"
                                          th:with="percentage=${item.totalSold * 100 / topSales[0].totalSold}"
                                          th:style="'background:var(--primary); height:10px; border-radius:20px; width:' + ${percentage} + '%'"></div>
-                                    <div th:if="${topSales.size() == 0 || topSales[0].totalSold == 0}"
+                                    <div th:if="${topSales.size() == 0 or topSales[0].totalSold == 0}"
                                          style="background:var(--primary); height:10px; border-radius:20px; width:0%"></div>
                                 </div>
                             </td>
@@ -306,6 +341,7 @@
     </main>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script th:src="@{/js/sidebar.js}" src="/js/sidebar.js"></script>
 <script th:src="@{/js/staff-dashboard.js}" src="/js/staff-dashboard.js"></script>
 </body>

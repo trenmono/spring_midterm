@@ -58,7 +58,8 @@
                             <input type="hidden" class="qty-input" name="quantity" th:value="${item.quantity}">
                             <button type="submit" name="action" value="decrease" aria-label="Decrease quantity">−</button>
                             <span class="qty-value" th:text="${item.quantity}">1</span>
-                            <button type="submit" name="action" value="increase" aria-label="Increase quantity">+</button>
+                            <button type="submit" name="action" value="increase" aria-label="Increase quantity"
+                                    th:disabled="${item.quantity >= item.product.quantityNum}">+</button>
                         </form>
                     </td>
                     <td style="font-weight:900;color:#111827;" th:text="${'$' + item.subtotal}">$0.00</td>

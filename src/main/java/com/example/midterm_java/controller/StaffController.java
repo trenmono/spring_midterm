@@ -16,6 +16,7 @@ public class StaffController {
 
     @Autowired
     private StaffRepository staffRepository;
+    @Autowired
     private RoleRepository roleRepository;
 
     @GetMapping

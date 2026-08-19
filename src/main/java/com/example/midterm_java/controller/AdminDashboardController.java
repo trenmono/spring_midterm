@@ -48,6 +48,7 @@ public class AdminDashboardController {
             @RequestParam(defaultValue = "list") String action,
             @RequestParam(required = false) Integer id,
             @RequestParam(required = false) Integer filterCategory,
+            @RequestParam(required = false) Integer filterCategoryId,
             @RequestParam(required = false) Integer expMonth,
             @RequestParam(required = false) Integer expYear,
             @RequestParam(required = false) String search,
@@ -63,7 +64,7 @@ public class AdminDashboardController {
             case "products" -> loadProducts(model, action, id, filterCategory, search);
             case "categories" -> loadCategories(model, action, id, filterCategory, search);
             case "expired" -> loadExpired(model, filterCategory, expMonth, expYear, search);
-            case "top-sales" -> loadTopSales(model, search);
+            case "top-sales" -> loadTopSales(model, search, filterCategoryId);
             default -> loadUsers(model, action, id, search);
         }
         return "admin/dashboard";
@@ -142,8 +143,26 @@ public class AdminDashboardController {
         model.addAttribute("expiredProducts", dashboardService.filterExpiredProducts(expMonth, expYear, categoryName, search));
     }
 
-    private void loadTopSales(Model model, String search) {
-        model.addAttribute("topSales", dashboardService.getTopSalesRanked(search));
+    private void loadTopSales(Model model, String search, Integer filterCategoryId) {
+        // Full per-row ranked list (optionally filtered by search)
+        java.util.List<com.example.midterm_java.model.CategorySalesDTO> ranked = dashboardService.getTopSalesRanked(search);
+
+        // Apply category filter on top of search
+        if (filterCategoryId != null) {
+            ranked = ranked.stream()
+                    .filter(dto -> dto.getCategoryId() == filterCategoryId)
+                    .collect(java.util.stream.Collectors.toList());
+            // Re-rank after filtering
+            int rank = 1;
+            for (com.example.midterm_java.model.CategorySalesDTO dto : ranked) {
+                dto.setRank(rank++);
+            }
+        }
+
+        model.addAttribute("topSales", ranked);
+        // Aggregated per-category totals for pie chart
+        model.addAttribute("categorySales", dashboardService.getSalesByCategory());
+        model.addAttribute("filterCategoryId", filterCategoryId);
     }
 
 

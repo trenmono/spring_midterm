@@ -171,5 +171,22 @@ public class DashboardServiceImpl implements DashboardService {
     public List<CategorySalesDTO> getTopSalesRanked() {
         return getTopSalesRanked(null);
     }
+
+    @Override
+    public List<CategorySalesDTO> getSalesByCategory() {
+        try {
+            List<Object[]> results = saleRepository.findTopSalesByCategory();
+            List<CategorySalesDTO> list = new java.util.ArrayList<>();
+            for (Object[] row : results) {
+                int catId = ((Number) row[0]).intValue();
+                String catName = row[1] != null ? row[1].toString() : "Uncategorized";
+                long total = ((Number) row[2]).longValue();
+                list.add(new CategorySalesDTO(catId, catName, total));
+            }
+            return list;
+        } catch (Exception e) {
+            return List.of();
+        }
+    }
 }
 

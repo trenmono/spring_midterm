@@ -257,10 +257,10 @@
                 <button
                         type="submit"
                         class="btn btn-primary"
-                        th:disabled="${p.quantityNum <= 0}">
+                        th:disabled="${p.quantityNum <= 0 || (cart != null && cart.containsKey(p.id) && cart.get(p.id) >= p.quantityNum)}">
 
                     <span
-                            th:text="${p.quantityNum > 0 ? 'Add to Cart' : 'Out of Stock'}">
+                            th:text="${p.quantityNum <= 0 ? 'Out of Stock' : (cart != null && cart.containsKey(p.id) && cart.get(p.id) >= p.quantityNum ? 'Limit Reached' : 'Add to Cart')}">
 
                         Add to Cart
 

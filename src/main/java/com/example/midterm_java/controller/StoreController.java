@@ -47,14 +47,36 @@ public class StoreController {
         model.addAttribute("search", search);
         model.addAttribute("categoryId", categoryId);
         model.addAttribute("cartCount", getCartCount(session));
+        model.addAttribute("cart", getCart(session));
         model.addAttribute("user", session.getAttribute("user"));
         return "store/store";
     }
 
     @PostMapping("/cart/add")
     public String addToCart(@RequestParam Integer productId, HttpSession session, RedirectAttributes redirectAttributes) {
+        Optional<Product> pOpt = productRepository.findById(productId);
+        if (pOpt.isEmpty()) {
+            redirectAttributes.addFlashAttribute("toastMessage", "Product not found!");
+            redirectAttributes.addFlashAttribute("toastType", "danger");
+            return "redirect:/store";
+        }
+        Product product = pOpt.get();
+        int stock = product.getQuantityNum();
+        if (stock <= 0) {
+            redirectAttributes.addFlashAttribute("toastMessage", "Product is out of stock!");
+            redirectAttributes.addFlashAttribute("toastType", "danger");
+            return "redirect:/store";
+        }
+
         Map<Integer, Integer> cart = getCart(session);
-        cart.put(productId, cart.getOrDefault(productId, 0) + 1);
+        int currentQty = cart.getOrDefault(productId, 0);
+        if (currentQty + 1 > stock) {
+            redirectAttributes.addFlashAttribute("toastMessage", "Cannot add more than available stock (" + stock + " available)!");
+            redirectAttributes.addFlashAttribute("toastType", "danger");
+            return "redirect:/store";
+        }
+
+        cart.put(productId, currentQty + 1);
         session.setAttribute("cart", cart);
 
         redirectAttributes.addFlashAttribute("toastMessage", "Item added to cart!");
@@ -88,23 +110,39 @@ public class StoreController {
     public String updateCart(
             @RequestParam Integer productId,
             @RequestParam String action,
-            HttpSession session
+            HttpSession session,
+            RedirectAttributes redirectAttributes
     ) {
         Map<Integer, Integer> cart = getCart(session);
         if (cart.containsKey(productId)) {
             int currentQty = cart.get(productId);
             if ("increase".equalsIgnoreCase(action)) {
-                cart.put(productId, currentQty + 1);
+                Optional<Product> pOpt = productRepository.findById(productId);
+                if (pOpt.isPresent()) {
+                    Product product = pOpt.get();
+                    int stock = product.getQuantityNum();
+                    if (currentQty + 1 > stock) {
+                        redirectAttributes.addFlashAttribute("toastMessage", "Cannot exceed available stock (" + stock + " available)!");
+                        redirectAttributes.addFlashAttribute("toastType", "danger");
+                    } else {
+                        cart.put(productId, currentQty + 1);
+                        session.setAttribute("cart", cart);
+                    }
+                } else {
+                    cart.remove(productId);
+                    session.setAttribute("cart", cart);
+                }
             } else if ("decrease".equalsIgnoreCase(action)) {
                 if (currentQty > 1) {
                     cart.put(productId, currentQty - 1);
                 } else {
                     cart.remove(productId);
                 }
+                session.setAttribute("cart", cart);
             } else if ("remove".equalsIgnoreCase(action)) {
                 cart.remove(productId);
+                session.setAttribute("cart", cart);
             }
-            session.setAttribute("cart", cart);
         }
         return "redirect:/cart";
     }
@@ -121,6 +159,26 @@ public class StoreController {
         Map<Integer, Integer> cart = getCart(session);
 
         if (!cart.isEmpty()) {
+            // Validate all items before processing
+            for (Map.Entry<Integer, Integer> entry : cart.entrySet()) {
+                Integer productId = entry.getKey();
+                Integer purchasedQty = entry.getValue();
+
+                Optional<Product> pOpt = productRepository.findById(productId);
+                if (pOpt.isPresent()) {
+                    Product product = pOpt.get();
+                    if (purchasedQty > product.getQuantityNum()) {
+                        redirectAttributes.addFlashAttribute("toastMessage", "Product '" + product.getName() + "' is out of stock or does not have enough quantity!");
+                        redirectAttributes.addFlashAttribute("toastType", "danger");
+                        return "redirect:/cart";
+                    }
+                } else {
+                    redirectAttributes.addFlashAttribute("toastMessage", "One or more products in your cart are no longer available.");
+                    redirectAttributes.addFlashAttribute("toastType", "danger");
+                    return "redirect:/cart";
+                }
+            }
+
             LocalDate today = LocalDate.now();
             String userBuy = currentUser.getUserName();
 
@@ -133,7 +191,7 @@ public class StoreController {
                     Product product = pOpt.get();
                     // Deduct quantity from product database record
                     int currentStock = product.getQuantityNum();
-                    int newStock = Math.max(0, currentStock - purchasedQty);
+                    int newStock = currentStock - purchasedQty;
                     product.setQty(String.valueOf(newStock));
                     productRepository.save(product);
 

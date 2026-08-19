@@ -30,5 +30,10 @@ public interface DashboardService {
     default List<CategorySalesDTO> getTopSalesRanked() {
         return getTopSalesRanked(null);
     }
+
+    /**
+     * Get total units sold aggregated per category (for pie chart data)
+     */
+    List<CategorySalesDTO> getSalesByCategory();
 }
 

@@ -71,13 +71,13 @@ public class PageController {
             return "redirect:/login";
         }
 
-        Role userRole = roleRepository.findByRoleName("USER")
-                .orElseGet(() -> roleRepository.save(new Role("USER")));
+        Role staffRole = roleRepository.findByRoleName("STAFF")
+                .orElseGet(() -> roleRepository.save(new Role("STAFF")));
 
         Staff newStaff = new Staff();
         newStaff.setUserName(username);
         newStaff.setPassword(password);
-        newStaff.setRole(userRole);
+        newStaff.setRole(staffRole);
         staffRepository.save(newStaff);
 
         redirectAttributes.addFlashAttribute("toastMessage", "Registration successful! Please login.");
