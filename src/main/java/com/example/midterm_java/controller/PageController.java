@@ -71,8 +71,8 @@ public class PageController {
             return "redirect:/login";
         }
 
-        Role staffRole = roleRepository.findByRoleName("STAFF")
-                .orElseGet(() -> roleRepository.save(new Role("STAFF")));
+        Role staffRole = roleRepository.findByRoleName("USER")
+                .orElseGet(() -> roleRepository.save(new Role("USER")));
 
         Staff newStaff = new Staff();
         newStaff.setUserName(username);

@@ -15,6 +15,7 @@ public class ResourceNotFoundException extends RuntimeException {
     }
 
     public static ResourceNotFoundException staffNotFound() {
+
         return new ResourceNotFoundException("Staff not found");
     }
 }
